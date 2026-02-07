@@ -21,32 +21,61 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500/30">
-      {/* Background Gradients */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
+      {/* Background Gradients & Floating Elements */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl mix-blend-screen animate-pulse" style={{ animationDuration: '4s' }}></div>
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl mix-blend-screen animate-pulse" style={{ animationDuration: '7s' }}></div>
+        
+        {/* Floating Icons */}
+        <div className="absolute top-20 left-10 opacity-10 animate-float" style={{ animationDelay: '0s' }}>
+          <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+          </svg>
+        </div>
+        <div className="absolute bottom-40 right-10 opacity-10 animate-float" style={{ animationDelay: '2s' }}>
+          <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v11.26l6.37 6.37C20.95 18.28 22 16.25 22 12c0-5.21-3.93-9.5-9-10z"/>
+          </svg>
+        </div>
+        <div className="absolute top-1/3 right-1/4 opacity-10 animate-float" style={{ animationDelay: '4s' }}>
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
+          </svg>
+        </div>
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-12 md:py-20">
         {/* Hero Section */}
-        <header className="text-center mb-16 space-y-6">
-          <div className="inline-block px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700 text-sm text-indigo-400 font-medium mb-4">
+        <header className="text-center mb-16 space-y-6 animate-in slide-in-from-bottom duration-700 fade-in">
+          <div className="flex justify-center mb-6">
+            <div className="relative w-20 h-20 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 animate-bounce">
+              <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="13" width="4" height="9" className="animate-pulse" style={{ animationDelay: '0ms' }} />
+                <rect x="10" y="8" width="4" height="14" className="animate-pulse" style={{ animationDelay: '150ms' }} />
+                <rect x="18" y="3" width="4" height="19" className="animate-pulse" style={{ animationDelay: '300ms' }} />
+              </svg>
+            </div>
+          </div>
+          
+          <div className="inline-block px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700 text-sm text-indigo-400 font-medium mb-4 backdrop-blur-sm">
             ✨ AI-Powered Chart Generation
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 drop-shadow-sm">
             ChartGen AI
           </h1>
-          <p className="text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Transform raw data into professional visualization in seconds.
-            Just paste your CSV or JSON and let AI do the rest.
-          </p>
+          <div className="max-w-2xl mx-auto">
+             <p className="text-xl md:text-2xl text-slate-400 leading-relaxed overflow-hidden whitespace-nowrap border-r-4 border-indigo-500 animate-typing">
+              Transform raw data into visualization.
+            </p>
+          </div>
+          <p className="text-slate-500 mt-2">Just paste your CSV or JSON and let AI do the rest.</p>
         </header>
 
         {/* Main Interface */}
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           
           {/* Input Section */}
-          <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl">
+          <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl hover:shadow-indigo-500/10 hover:scale-[1.01] transition-all duration-300 animate-in slide-in-from-bottom duration-700 fade-in delay-200">
             <div className="space-y-6">
               
               {/* Data Input */}
@@ -79,11 +108,12 @@ export default function Home() {
                   </select>
                 </div>
 
-                <div className="flex items-end">
+                <div className="flex items-end relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-pink-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200 animate-sparkle"></div>
                   <button
                     onClick={handleGenerate}
                     disabled={isGenerating || !dataInput.trim()}
-                    className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all transform active:scale-95 flex items-center justify-center gap-2
+                    className={`relative w-full py-3 px-6 rounded-lg font-semibold text-white transition-all transform active:scale-95 flex items-center justify-center gap-2
                       ${isGenerating || !dataInput.trim()
                         ? 'bg-slate-700 cursor-not-allowed opacity-50' 
                         : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/25'
@@ -110,9 +140,9 @@ export default function Home() {
           </div>
 
           {/* Preview Section */}
-          <div className={`bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl h-full min-h-[500px] flex flex-col transition-all duration-500 ${showPreview ? 'opacity-100' : 'opacity-80'}`}>
+          <div className={`bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl h-full min-h-[500px] flex flex-col transition-all duration-500 hover:shadow-indigo-500/10 hover:scale-[1.01] animate-in slide-in-from-bottom duration-700 fade-in delay-300 ${showPreview ? 'opacity-100' : 'opacity-80'}`}>
             <h2 className="text-xl font-semibold text-slate-200 mb-6 flex items-center gap-2">
-              <span className="w-2 h-8 bg-indigo-500 rounded-full"></span>
+              <span className="w-2 h-8 bg-indigo-500 rounded-full animate-pulse"></span>
               Preview
             </h2>
             
@@ -124,8 +154,8 @@ export default function Home() {
                     {[40, 70, 45, 90, 60, 80, 50].map((h, i) => (
                       <div 
                         key={i} 
-                        className="w-full bg-gradient-to-t from-indigo-600 to-purple-500 rounded-t-sm hover:opacity-90 transition-all duration-500"
-                        style={{ height: `${h}%` }}
+                        className="w-full bg-gradient-to-t from-indigo-600 to-purple-500 rounded-t-sm hover:opacity-90 transition-all duration-500 animate-in slide-in-from-bottom fade-in fill-mode-backwards"
+                        style={{ height: `${h}%`, animationDelay: `${i * 100}ms`, animationDuration: '0.8s' }}
                       ></div>
                     ))}
                   </div>
