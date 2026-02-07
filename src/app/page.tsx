@@ -22,10 +22,34 @@ import {
 const COLORS = ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899", "#f43f5e", "#f97316"];
 
 function parseData(input: string): any[] {
-  const lines = input.trim().split("\n");
-  if (lines.length < 2) return [];
+  const trimmed = input.trim();
+  
+  // Try JSON format first
+  if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+    try {
+      let parsed = JSON.parse(trimmed);
+      // If it's a single object, wrap in array
+      if (!Array.isArray(parsed)) {
+        parsed = [parsed];
+      }
+      // Convert string numbers to actual numbers
+      return parsed.map((item: any) => {
+        const obj: any = {};
+        Object.keys(item).forEach((key) => {
+          const val = item[key];
+          obj[key] = typeof val === "string" && !isNaN(Number(val)) ? Number(val) : val;
+        });
+        return obj;
+      });
+    } catch {
+      // Not valid JSON, try CSV
+    }
+  }
 
   // Try CSV format
+  const lines = trimmed.split("\n");
+  if (lines.length < 2) return [];
+
   const headers = lines[0].split(",").map((h) => h.trim());
   const data = lines.slice(1).map((line) => {
     const values = line.split(",").map((v) => v.trim());
