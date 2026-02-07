@@ -21,27 +21,35 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    
+    // Use Gemini 2.0 Flash with image generation capability
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash-exp",
+      generationConfig: {
+        responseModalities: ["image", "text"],
+      } as any,
+    });
 
-    const prompt = `Generate a ${chartType} chart for the following data:
+    const prompt = `Generate a beautiful, professional ${chartType} chart visualization for this data:
+
 ${data}
 
-Please create a visual representation of this data as a chart. 
-The chart should be clear, professional, and visually appealing.
-Return the result as an image.`;
+Create a visually stunning chart with:
+- Clear labels and legends
+- Professional color scheme (blues, purples, gradients)
+- Clean modern design
+- Dark theme background (#1e293b)
+- White/light text for contrast
 
-    // Note: In a real scenario, we might need to use a specific tool or endpoint for image generation
-    // if the main generateContent endpoint doesn't support direct image output for this model.
-    // However, assuming gemini-2.0-flash-exp supports multimodal generation:
+Generate this as an actual image, not code or text description.`;
+
     const result = await model.generateContent(prompt);
     const response = await result.response;
     
-    // Check if we have any inline data (images)
-    // The structure might vary depending on how the model returns the image.
-    // We look for parts that have inlineData.
     const candidates = response.candidates;
     if (!candidates || candidates.length === 0) {
-      throw new Error("No candidates returned");
+      // Fallback: try with Imagen model via REST API
+      return await generateWithImagen(apiKey, data, chartType);
     }
 
     const parts = candidates[0].content.parts;
@@ -55,32 +63,64 @@ Return the result as an image.`;
       return NextResponse.json({ image: dataUrl });
     }
     
-    // If no image part found, maybe it returned text describing the chart or saying it can't?
-    // In that case we might want to return the text to debug, or fail.
-    // For now, let's try to see if it returned text and log it, but return an error to client.
-    const textPart = parts.find((part) => part.text);
-    if (textPart && textPart.text) {
-      console.log("Model returned text instead of image:", textPart.text);
-      // Fallback: If the model refuses to generate an image or returns code/text,
-      // we could treat it as an error or pass the text back. 
-      // But the requirement is to display an image.
-      // We will return an error message.
-      return NextResponse.json(
-        { error: "Model returned text instead of an image. " + textPart.text.substring(0, 100) + "..." },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "No image generated" },
-      { status: 500 }
-    );
+    // Try Imagen as fallback
+    return await generateWithImagen(apiKey, data, chartType);
 
   } catch (error: any) {
     console.error("Error generating chart:", error);
+    
+    // If main model fails, try fallback
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (apiKey) {
+      try {
+        const { data, chartType } = await req.clone().json();
+        return await generateWithImagen(apiKey, data, chartType);
+      } catch {
+        // Fallback also failed
+      }
+    }
+    
     return NextResponse.json(
       { error: error.message || "Failed to generate chart" },
       { status: 500 }
     );
   }
+}
+
+async function generateWithImagen(apiKey: string, data: string, chartType: string) {
+  // Use Imagen 4 via REST API
+  const prompt = `A professional ${chartType} chart showing: ${data.substring(0, 200)}. Clean modern design, dark background, vibrant colors, clear labels.`;
+  
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        instances: [{ prompt }],
+        parameters: {
+          sampleCount: 1,
+          aspectRatio: "16:9",
+        },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Imagen API error:", errorText);
+    throw new Error("Image generation failed");
+  }
+
+  const result = await response.json();
+  
+  if (result.predictions && result.predictions[0]?.bytesBase64Encoded) {
+    const base64Data = result.predictions[0].bytesBase64Encoded;
+    const dataUrl = `data:image/png;base64,${base64Data}`;
+    return NextResponse.json({ image: dataUrl });
+  }
+
+  throw new Error("No image generated");
 }
