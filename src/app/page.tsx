@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
+import { toPng, toSvg } from "html-to-image";
+import { saveAs } from "file-saver";
 import {
   BarChart,
   Bar,
@@ -80,6 +82,8 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const chartRef = useRef<HTMLDivElement>(null);
 
   const parsedData = useMemo(() => parseData(dataInput), [dataInput]);
   const numericKeys = useMemo(() => getNumericKeys(parsedData), [parsedData]);
@@ -105,6 +109,31 @@ export default function Home() {
       setShowPreview(true);
     }, 500);
   };
+
+  const handleDownload = useCallback(async (format: "png" | "svg") => {
+    if (!chartRef.current) return;
+    
+    setIsDownloading(true);
+    try {
+      const options = {
+        backgroundColor: "#0f172a",
+        pixelRatio: 2,
+      };
+      
+      if (format === "png") {
+        const dataUrl = await toPng(chartRef.current, options);
+        saveAs(dataUrl, `chart-${Date.now()}.png`);
+      } else {
+        const dataUrl = await toSvg(chartRef.current, options);
+        saveAs(dataUrl, `chart-${Date.now()}.svg`);
+      }
+    } catch (err) {
+      console.error("Download failed:", err);
+      setError("Failed to download chart");
+    } finally {
+      setIsDownloading(false);
+    }
+  }, []);
 
   const renderChart = () => {
     if (parsedData.length === 0) return null;
@@ -424,14 +453,42 @@ export default function Home() {
               showPreview ? "opacity-100" : "opacity-80"
             }`}
           >
-            <h2 className="text-xl font-semibold text-slate-200 mb-6 flex items-center gap-2">
-              <span className="w-2 h-8 bg-indigo-500 rounded-full animate-pulse"></span>
-              Preview
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-slate-200 flex items-center gap-2">
+                <span className="w-2 h-8 bg-indigo-500 rounded-full animate-pulse"></span>
+                Preview
+              </h2>
+              {showPreview && parsedData.length > 0 && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleDownload("png")}
+                    disabled={isDownloading}
+                    className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300 transition-all flex items-center gap-1.5"
+                  >
+                    {isDownloading ? (
+                      <span className="animate-spin">⏳</span>
+                    ) : (
+                      <>📥 PNG</>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleDownload("svg")}
+                    disabled={isDownloading}
+                    className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300 transition-all flex items-center gap-1.5"
+                  >
+                    {isDownloading ? (
+                      <span className="animate-spin">⏳</span>
+                    ) : (
+                      <>📥 SVG</>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="flex-1 rounded-xl bg-slate-950/50 border border-slate-800/50 flex items-center justify-center relative overflow-hidden">
               {showPreview && parsedData.length > 0 ? (
-                <div className="w-full h-full p-4">{renderChart()}</div>
+                <div ref={chartRef} className="w-full h-full p-4 bg-slate-950">{renderChart()}</div>
               ) : (
                 <div className="text-center p-8">
                   <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
