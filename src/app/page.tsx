@@ -21,7 +21,13 @@ import {
   Cell,
 } from "recharts";
 
-const COLORS = ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899", "#f43f5e", "#f97316"];
+const COLOR_THEMES = {
+  purple: ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899", "#f43f5e", "#f97316"],
+  ocean: ["#0ea5e9", "#06b6d4", "#14b8a6", "#10b981", "#22c55e", "#84cc16", "#eab308"],
+  sunset: ["#f97316", "#fb923c", "#fbbf24", "#facc15", "#a3e635", "#4ade80", "#2dd4bf"],
+  neon: ["#f0abfc", "#e879f9", "#d946ef", "#c026d3", "#a21caf", "#86198f", "#701a75"],
+  mono: ["#f8fafc", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#475569", "#334155"],
+};
 
 function parseData(input: string): any[] {
   const trimmed = input.trim();
@@ -79,11 +85,15 @@ function getNameKey(data: any[]): string {
 export default function Home() {
   const [dataInput, setDataInput] = useState("");
   const [chartType, setChartType] = useState("bar");
+  const [colorTheme, setColorTheme] = useState<keyof typeof COLOR_THEMES>("purple");
+  const [chartTitle, setChartTitle] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
+  
+  const COLORS = COLOR_THEMES[colorTheme];
 
   const parsedData = useMemo(() => parseData(dataInput), [dataInput]);
   const numericKeys = useMemo(() => getNumericKeys(parsedData), [parsedData]);
@@ -375,8 +385,22 @@ export default function Home() {
                 />
               </div>
 
+              {/* Chart Title */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-300">
+                  Chart Title (optional)
+                </label>
+                <input
+                  type="text"
+                  value={chartTitle}
+                  onChange={(e) => setChartTitle(e.target.value)}
+                  placeholder="My Awesome Chart"
+                  className="w-full bg-slate-950/50 border border-slate-700 rounded-lg px-4 py-3 text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-600"
+                />
+              </div>
+
               {/* Controls */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-slate-300">
                     Chart Type
@@ -389,10 +413,27 @@ export default function Home() {
                     }}
                     className="w-full bg-slate-950/50 border border-slate-700 rounded-lg px-4 py-3 text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
                   >
-                    <option value="bar">📊 Bar Chart</option>
-                    <option value="line">📈 Line Chart</option>
-                    <option value="pie">🥧 Pie Chart</option>
-                    <option value="area">📉 Area Chart</option>
+                    <option value="bar">📊 Bar</option>
+                    <option value="line">📈 Line</option>
+                    <option value="pie">🥧 Pie</option>
+                    <option value="area">📉 Area</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-300">
+                    Color Theme
+                  </label>
+                  <select
+                    value={colorTheme}
+                    onChange={(e) => setColorTheme(e.target.value as keyof typeof COLOR_THEMES)}
+                    className="w-full bg-slate-950/50 border border-slate-700 rounded-lg px-4 py-3 text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
+                  >
+                    <option value="purple">💜 Purple</option>
+                    <option value="ocean">🌊 Ocean</option>
+                    <option value="sunset">🌅 Sunset</option>
+                    <option value="neon">✨ Neon</option>
+                    <option value="mono">⚪ Mono</option>
                   </select>
                 </div>
 
@@ -488,7 +529,12 @@ export default function Home() {
 
             <div className="flex-1 rounded-xl bg-slate-950/50 border border-slate-800/50 flex items-center justify-center relative overflow-hidden">
               {showPreview && parsedData.length > 0 ? (
-                <div ref={chartRef} className="w-full h-full p-4 bg-slate-950">{renderChart()}</div>
+                <div ref={chartRef} className="w-full h-full p-4 bg-slate-950">
+                  {chartTitle && (
+                    <h3 className="text-center text-lg font-semibold text-slate-200 mb-2">{chartTitle}</h3>
+                  )}
+                  {renderChart()}
+                </div>
               ) : (
                 <div className="text-center p-8">
                   <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
