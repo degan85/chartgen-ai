@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { toPng, toSvg } from "html-to-image";
 import { saveAs } from "file-saver";
+import Link from "next/link";
 import {
   BarChart,
   Bar,
@@ -330,6 +331,13 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-12 md:py-20">
+        {/* Nav */}
+        <nav className="flex justify-end mb-8">
+          <Link href="/pricing" className="text-slate-400 hover:text-slate-200 transition-colors text-sm font-medium">
+            💰 Pricing
+          </Link>
+        </nav>
+
         {/* Hero Section */}
         <header className="text-center mb-16 space-y-6">
           <div className="flex justify-center mb-6">
