@@ -370,9 +370,23 @@ export default function Home() {
             <div className="space-y-6">
               {/* Data Input */}
               <div className="space-y-3">
-                <label htmlFor="data-input" className="block text-sm font-medium text-slate-300">
-                  Paste Data (CSV format)
-                </label>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="data-input" className="block text-sm font-medium text-slate-300">
+                    Paste Data (CSV or JSON)
+                  </label>
+                  <button
+                    onClick={() => setDataInput(`Month,Sales,Profit
+Jan,4500,1200
+Feb,5200,1800
+Mar,4800,1500
+Apr,6100,2200
+May,7300,2800
+Jun,6800,2400`)}
+                    className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    📋 Load Sample
+                  </button>
+                </div>
                 <textarea
                   id="data-input"
                   value={dataInput}
