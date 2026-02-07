@@ -7,16 +7,47 @@ export default function Home() {
   const [chartType, setChartType] = useState("bar");
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!dataInput.trim()) return;
     
     setIsGenerating(true);
-    // Simulate generation delay
-    setTimeout(() => {
+    setShowPreview(false);
+    setError(null);
+    setImageUrl(null);
+
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: dataInput,
+          chartType: chartType,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to generate chart");
+      }
+
+      if (result.image) {
+        setImageUrl(result.image);
+        setShowPreview(true);
+      } else {
+         throw new Error("No image returned from API");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Something went wrong");
+    } finally {
       setIsGenerating(false);
-      setShowPreview(true);
-    }, 1500);
+    }
   };
 
   return (
@@ -140,29 +171,21 @@ export default function Home() {
           </div>
 
           {/* Preview Section */}
-          <div className={`bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl h-full min-h-[500px] flex flex-col transition-all duration-500 hover:shadow-indigo-500/10 hover:scale-[1.01] animate-in slide-in-from-bottom duration-700 fade-in delay-300 ${showPreview ? 'opacity-100' : 'opacity-80'}`}>
+          <div className={`bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl h-full min-h-[500px] flex flex-col transition-all duration-500 hover:shadow-indigo-500/10 hover:scale-[1.01] animate-in slide-in-from-bottom duration-700 fade-in delay-300 ${showPreview || error ? 'opacity-100' : 'opacity-80'}`}>
             <h2 className="text-xl font-semibold text-slate-200 mb-6 flex items-center gap-2">
               <span className="w-2 h-8 bg-indigo-500 rounded-full animate-pulse"></span>
               Preview
             </h2>
             
             <div className="flex-1 rounded-xl bg-slate-950/50 border border-slate-800/50 flex items-center justify-center relative overflow-hidden group">
-              {showPreview ? (
-                <div className="w-full h-full p-8 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
-                  {/* Mock Chart Visualization */}
-                  <div className="w-full h-64 flex items-end justify-between gap-2 px-4 mb-4">
-                    {[40, 70, 45, 90, 60, 80, 50].map((h, i) => (
-                      <div 
-                        key={i} 
-                        className="w-full bg-gradient-to-t from-indigo-600 to-purple-500 rounded-t-sm hover:opacity-90 transition-all duration-500 animate-in slide-in-from-bottom fade-in fill-mode-backwards"
-                        style={{ height: `${h}%`, animationDelay: `${i * 100}ms`, animationDuration: '0.8s' }}
-                      ></div>
-                    ))}
-                  </div>
-                  <div className="w-full h-px bg-slate-700 mb-2"></div>
-                  <div className="flex justify-between w-full text-xs text-slate-500 px-4">
-                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-                  </div>
+              {error ? (
+                 <div className="p-8 text-center text-red-400">
+                   <p className="font-semibold text-lg mb-2">Error</p>
+                   <p>{error}</p>
+                 </div>
+              ) : imageUrl ? (
+                <div className="w-full h-full p-4 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
+                  <img src={imageUrl} alt="Generated Chart" className="max-w-full max-h-full rounded-lg shadow-lg object-contain" />
                   <div className="mt-8 text-center">
                     <p className="text-sm text-slate-400 font-medium">Chart successfully generated!</p>
                   </div>
@@ -174,7 +197,7 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
-                  <p className="text-slate-500 font-medium">Enter data and click generate to see preview</p>
+                  <p className="text-slate-500 font-medium">{isGenerating ? "Generating..." : "Enter data and click generate to see preview"}</p>
                 </div>
               )}
             </div>
